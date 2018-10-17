@@ -129,20 +129,12 @@ class KNearestNeighbor(object):
     #       and two broadcast sums.                                         #
     #########################################################################
     pass
-    # print("dists0:")
-    # print(dists)
+    
     dists += np.sum(self.X_train ** 2, axis=1).reshape(1, num_train)
-    # print("dists1:")
-    # print(dists)
     dists += np.sum(X ** 2, axis=1).reshape(num_test, 1) # reshape for broadcasting
-    # print("dists2:")
-    # print(dists)
     dists -= 2 * np.dot(X, self.X_train.T)
-    # print("dists3:")
-    # print(dists)
     dists = np.sqrt(dists)
-    # print("dists4:")
-    # print(dists)
+    
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
