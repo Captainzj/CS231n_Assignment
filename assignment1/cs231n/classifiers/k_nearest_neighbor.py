@@ -167,10 +167,11 @@ class KNearestNeighbor(object):
       # Hint: Look up the function numpy.argsort.                             #
       #########################################################################
       pass
-      # closest_y = self.y_train[np.argsort(dists[i])[:k]]
 
-      sorted_index = np.argsort(dists[i])
-      closest_y = self.y_train[sorted_index[:k]]
+      # sorted_index = np.argsort(dists[i])
+      # closest_y = self.y_train[sorted_index[:k]]
+
+      closest_y = self.y_train[np.argsort(dists[i])[:k]]
 
       #########################################################################
       # TODO:                                                                 #
