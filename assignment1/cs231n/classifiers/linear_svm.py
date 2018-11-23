@@ -13,34 +13,37 @@ def svm_loss_naive(W, X, y, reg):
   - X: A numpy array of shape (N, D) containing a minibatch of data.
   - y: A numpy array of shape (N,) containing training labels; y[i] = c means
     that X[i] has label c, where 0 <= c < C.
-  - reg: (float) regularization strength
+  - reg: (float) regularization strength 正则化强度
 
   Returns a tuple of:
   - loss as single float
   - gradient with respect to weights W; an array of same shape as W
   """
-  dW = np.zeros(W.shape) # initialize the gradient as zero
+  """
+  example:
+  #W.shape == (D,C) == (3073, 10)      D:dimension   C:class
+  #X_dev.shape == (N,D) == (500,3073)     N:number 
+  #y_dev.shape == (N,) == (500,)
+  #grad.shape == (3073, 10) = W.shape
+  """
+  dW = np.zeros(W.shape) # initialize the gradient as zero #
 
   # compute the loss and the gradient
-  num_classes = W.shape[1]
-  num_train = X.shape[0]
+  num_classes = W.shape[1] #10
+  num_train = X.shape[0]  #500
   loss = 0.0
-  for i in range(num_train):
+  for i in range(num_train):  #[0,500)
 
-    scores = X[i].dot(W)   #矩阵乘法
-    correct_class_score = scores[y[i]] #S_yi
-    '''
-    print("x.shape:",X.shape) #(500, 3073) 矩阵
-    print("X[i].shape:",X[i].shape) #(3073,) 向量
-    print("scores's shape:",scores.shape)#(10,) 向量
-    '''
+    scores = X[i].dot(W)   #矩阵乘法  (1,3073)*(3073,10)
+    correct_class_score = scores[y[i]] #S_yi  该图像在正确标签上的得分
 
     for j in range(num_classes):
       if j == y[i]:
         continue
-      margin = scores[j] - correct_class_score + 1 # note delta = 1
-      if margin > 0: #在真实标签上的模型得分与该分类模型上得分差距不满足大于delta时计算损失
+      margin = scores[j] - correct_class_score + 1 # note: delta = 1  
+      if margin > 0: #在真实标签上的模型得分与该分类模型上得分差距不满足大于delta时计算损失    margin:L_i中的子项   
         loss += margin
+
         # Compute gradients (one inner and one outer sum)
         # Wonderfully compact and hard to read
         dW[:, y[i]] -= X[i, :].T # this is really a sum over j != y_i
@@ -50,13 +53,9 @@ def svm_loss_naive(W, X, y, reg):
   # to be an average instead so we divide by num_train.
   loss /= num_train
   dW /= num_train
-  ''' 
-  print("w*w:",(W*W).shape)#(3073, 10)
-  print("np.sum(w*w)",(np.sum(W*W)).shape)#标量 矩阵W*W每个元素的和
-  '''
 
   # Add regularization to the loss.
-  loss += reg * np.sum(W * W)
+  loss += 0.5 *reg * np.sum(W * W)  #np.sum(W * W)对所有参数进行逐元素的平方惩罚
   # Gradient regularization that carries through per https://piazza.com/class/i37qi08h43qfv?cid=118
   dW += reg*W
 
@@ -69,7 +68,6 @@ def svm_loss_naive(W, X, y, reg):
   # code above to compute the gradient.                                       #
   #############################################################################
 
-
   return loss, dW
 
 
@@ -80,7 +78,7 @@ def svm_loss_vectorized(W, X, y, reg):
   Inputs and outputs are the same as svm_loss_naive.
   """
   loss = 0.0
-  dW = np.zeros(W.shape) # initialize the gradient as zero
+  dW = np.zeros(W.shape) # initialize the gradient as zero  #dW.shape==(3073,500)
 
   #############################################################################
   # TODO:                                                                     #
@@ -88,23 +86,19 @@ def svm_loss_vectorized(W, X, y, reg):
   # result in loss.                                                           #
   #############################################################################
   pass
-  scores=X.dot(W) #(500,10)
   num_classes=W.shape[1]
   num_train=X.shape[0]
-  scores_correct = scores[np.arange(num_train), y]  #(500,) has to reshape, or will be ValueError
-  scores_correct=np.reshape(scores_correct,(num_train,-1))
-  margins=scores-scores_correct+1#delta=1
+
+  scores=X.dot(W) #(500,10) = (500,3073)*(3073,10)
+  scores_correct = scores[np.arange(num_train), y]  #(500,) has to reshape, or will be ValueError   scores_correct[i]=scores[i,y[i]]
+  scores_correct=np.reshape(scores_correct,(num_train,-1))  #(500,1)  = (500,500*1/500)
+
+  margins=scores-scores_correct+1 #delta=1  #scores.shape=(500,10)
   margins=np.maximum(0,margins)
   margins[np.arange(num_train),y]=0#在计算loss时不把真实标签对应的得分之差delta计进去，即公式中j!=yi
   loss=np.sum(margins)/num_train
   loss += 0.5 * reg * np.sum(W * W)
 
-  # compute the gradient
-  margins[margins > 0] = 1
-  row_sum = np.sum(margins, axis=1)                  # 1 by N
-  margins[np.arange(num_train), y] = -row_sum        
-  # margins[np.arange(num_train), y] -= row_sum        
-  dW += np.dot(X.T, margins)/num_train + reg * W     # D by C
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -120,6 +114,12 @@ def svm_loss_vectorized(W, X, y, reg):
   # loss.                                                                     #
   #############################################################################
   pass
+  # compute the gradient
+  margins[margins > 0] = 1  #margins中大于0的元素，数值赋为1;其余数值不变   shape==(500,10)
+  row_sum = np.sum(margins, axis=1)                  # 1 by N  (1行N列)
+  margins[np.arange(num_train), y] = -row_sum        #margins[np.arange(num_train), y] 初始值值为0   shape==(500,)
+  #print(margins)  ##necessary to understand  
+  dW += np.dot(X.T, margins)/num_train + reg * W     # D by C   dW.shape==(3073，10)  X.T.shape==(3073,500)  margins.shape==(500,10)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
